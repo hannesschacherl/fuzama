@@ -9,7 +9,7 @@
             <TimeContainer
                 :time="time"
                 @update-time="updateTime"
-                class="xl:col-span-5 xl:row-span-1 md:col-span-2 sm:row-span-1 col-span-3 row-span-1 w-full h-full overflow-y-auto"
+                class="xl:col-span-5 xl:row-span-1 md:col-span-2 sm:row-span-1 col-span-3 row-span-1 w-full h-full overflow-hidden"
             />
             <!-- <AchievementsContainer class="hidden xl:grid h-full w-full xl:col-span-2 bg-blue-200 col-span-3 row-span-2" /> -->
             <GehenContainer
