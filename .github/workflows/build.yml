@@ -1,0 +1,107 @@
+name: Build and Publish Docker Image
+
+on:
+  # create a tag
+  push:
+    tags:
+      - 'v*'
+
+permissions: write-all
+
+jobs:
+  build-app:
+    runs-on: ubuntu-22.04
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Install bun.js
+        uses: oven-sh/setup-bun@v2
+
+      - name: Install dependencies
+        run: bun i
+
+      - name: Build nuxt app
+        run: bun run build
+
+      - name: Upload production bundle
+        uses: actions/upload-artifact@v4
+        with:
+          name: production-bundle
+          path: .output/
+
+  build-docker-image:
+    runs-on: ubuntu-22.04
+    needs: build-app
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Donwload production bundle
+        uses: actions/download-artifact@v4
+        with:
+          name: production-bundle
+          path: ./production-bundle
+
+      - run: ls -l
+
+      - run: ls -l docker
+
+      - name: Setup Docker
+        uses: docker-practice/actions-setup-docker@master
+
+      - name: Build docker image
+        run: docker build --pull --rm -f "docker/dockerfile" --tag "fuzamas/fuzama:latest" .
+
+      - name: save docker image
+        run: docker save -o fuzama.tar fuzamas/fuzama:latest
+
+      - name: Upload docker image
+        uses: actions/upload-artifact@v4
+        with:
+          name: fuzama.tar
+          path: ./fuzama.tar
+
+  release:
+    runs-on: ubuntu-22.04
+    needs: build-docker-image
+    steps:
+      - name: Download docker image
+        uses: actions/download-artifact@v4
+        with:
+          name: fuzama.tar
+
+      - name: Create GitHub release
+        uses: actions/create-release@v1
+        id: create_release
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          tag_name: ${{ github.ref }}
+          release_name: Release ${{ github.ref }}
+          body: |
+            Release ${{ github.ref }}
+          draft: false
+          prerelease: false
+
+      - name: Upload docker image as release asset
+        uses: actions/upload-release-asset@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          upload_url: ${{ steps.create_release.outputs.upload_url }}
+          asset_path: ./fuzama.tar
+          asset_name: fuzama.tar
+          asset_content_type: application/gzip
+
+  delete-artifacts:
+    runs-on: ubuntu-22.04
+    needs: release
+    steps:
+      - uses: geekyeggo/delete-artifact@v5
+        with:
+          name: |
+            production-bundle
+            fuzama.tar
+          failOnError: false
+
