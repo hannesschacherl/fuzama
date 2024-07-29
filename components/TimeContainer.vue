@@ -10,7 +10,7 @@
             </div>
         </div>
         <div
-            class="px-4 py-5 sm:p-6 grid grid-cols-[1fr,_5rem] grid-rows-[85px,_100px_100px] md:grid-cols-[160px,_5rem,_1fr] md:grid-rows-2 gap-2 w-full h-[calc(100%-81.5px)]"
+            class="px-4 py-5 sm:p-6 grid grid-cols-[1fr,_5rem] grid-rows-[85px,_100px_100px] md:grid-cols-[160px,_5rem,_1fr] md:grid-rows-2 gap-2 w-full h-[calc(100%-81.5px)] overflow-hidden"
         >
             <!-- Content goes here -->
 
