@@ -9,7 +9,7 @@
                 <div class="dark:bg-transparent">
 
                     <svg
-                        id="achievement-toggle-off"
+                        id="achievement-toggle-on"
                         class="hidden w-5 h-5 dark:bg-transparent"
                         width="100"
                         height="100"
@@ -33,7 +33,7 @@
                 <div class="dark:bg-transparent">
 
                     <svg
-                        id="achievement-toggle-on"
+                        id="achievement-toggle-off"
                         class="hidden w-5 h-5 dark:bg-transparent"
                         width="100"
                         height="100"
