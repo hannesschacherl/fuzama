@@ -16,7 +16,7 @@
 
             <!-- TIME INPUT -->
             <form class="w-full h-full col-span-1">
-                <div class="relative w-full h-full">
+                <div v-if="deviceType === 'Desktop'" class="relative w-full h-full">
                     <div
                         class="absolute bottom-0 right-[0.09rem] end-0 top-0 flex items-center pe-3.5 pointer-events-none"
                     >
@@ -42,6 +42,24 @@
                         max="23:59"
                         v-model="timeValue"
                         required
+                        @keydown.enter="applyTime"
+                    />
+                </div>
+                <div v-else class="w-full h-full flex gap-2">
+                    <input
+                        id="number"
+                        class="bg-gray-50 no-time-picker-icon border h-full text-4xl leading-none border-gray-300 text-gray-900 rounded-lg outline-none block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
+                        min="0"
+                        max="23"
+                        v-model="timeHH"
+                        @keydown.enter="applyTime"
+                    />
+                    <input
+                        id="number"
+                        class="bg-gray-50 no-time-picker-icon border h-full text-4xl leading-none border-gray-300 text-gray-900 rounded-lg outline-none block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
+                        min="0"
+                        max="59"
+                        v-model="timeMM"
                         @keydown.enter="applyTime"
                     />
                 </div>
@@ -135,6 +153,8 @@
 
 <script setup lang="ts">
 import { ref, onMounted, watch } from 'vue';
+import { detectDevice } from './../utils/detectDevice';
+const deviceType = ref('');
 
 // Define the type for the stats array items
 interface StatItem {
@@ -162,6 +182,8 @@ const setProgress = (value: { hh: number; mm: number }) => {
 };
 
 const timeValue = ref('');
+const timeHH = ref('');
+const timeMM = ref('');
 const confirmedValue = ref(0);
 const confirmedValue2 = ref(0);
 
@@ -219,16 +241,35 @@ const updateProgressBar = (): void => {
 };
 
 const applyTime = () => {
-    if (
-        timeValue.value === '' ||
-        isNaN(parseInt(timeValue.value.split(':')[0])) ||
-        isNaN(parseInt(timeValue.value.split(':')[1]))
-    ) {
-        return;
+    if (deviceType.value !== '' && (deviceType.value === 'Mobile' || deviceType.value === 'iOS' || deviceType.value === 'Android' || deviceType.value === 'Windows Phone')) {
+        if (
+            timeHH.value === '' ||
+            timeMM.value === '' ||
+            isNaN(parseInt(timeHH.value)) ||
+            isNaN(parseInt(timeMM.value)) ||
+            parseInt(timeHH.value) > 23 ||
+            parseInt(timeMM.value) > 59 ||
+            parseInt(timeHH.value) < 0 ||
+            parseInt(timeMM.value) < 0
+        ) {
+            return;
+        }
+
+        confirmedValue.value = parseInt(timeHH.value);
+        confirmedValue2.value = parseInt(timeMM.value);
+    } else {
+        if (
+            timeValue.value === '' ||
+            isNaN(parseInt(timeValue.value.split(':')[0])) ||
+            isNaN(parseInt(timeValue.value.split(':')[1]))
+        ) {
+            return;
+        }
+
+        confirmedValue.value = parseInt(timeValue.value.split(':')[0]);
+        confirmedValue2.value = parseInt(timeValue.value.split(':')[1]);
     }
 
-    confirmedValue.value = parseInt(timeValue.value.split(':')[0]);
-    confirmedValue2.value = parseInt(timeValue.value.split(':')[1]);
     setProgress({ hh: confirmedValue.value, mm: confirmedValue2.value });
 
     updateProgressBar();
@@ -319,6 +360,8 @@ const checkLocalStorage = () => {
     if (storedStartHH && storedStartMM && storedDate === currentDate) {
         confirmedValue.value = parseInt(storedStartHH, 10);
         confirmedValue2.value = parseInt(storedStartMM, 10);
+        timeHH.value = parseInt(storedStartHH, 10).toString().padStart(2, '0');
+        timeMM.value = parseInt(storedStartMM, 10).toString().padStart(2, '0');
         timeValue.value = `${confirmedValue.value
             .toString()
             .padStart(2, '0')}:${confirmedValue2.value
@@ -337,6 +380,8 @@ const checkLocalStorage = () => {
 onMounted(() => {
     const currentDate = new Date().toISOString().split('T')[0];
     const storedDate = localStorage.getItem('creationDate');
+
+    deviceType.value = detectDevice();
 
     if (storedDate !== currentDate) {
         localStorage.removeItem('startHH');

@@ -2,7 +2,9 @@
     <div
         class="divide-y divide-gray-200 dark:divide-black overflow-hidden rounded-lg bg-white dark:bg-gray-800 shadow w-full h-full"
     >
-        <div class="px-4 py-5 sm:px-6 text-4xl flex justify-between dark:text-white">
+        <div
+            class="px-4 py-5 sm:px-6 text-4xl flex justify-between dark:text-white"
+        >
             Gehen
         </div>
         <div
@@ -12,7 +14,10 @@
 
             <!-- TIME INPUT -->
             <form class="w-full h-full col-span-1">
-                <div class="relative w-full h-full">
+                <div
+                    v-if="deviceType === 'Desktop'"
+                    class="relative w-full h-full"
+                >
                     <div
                         class="absolute bottom-0 right-[0.09rem] end-0 top-0 flex items-center pe-3.5 pointer-events-none"
                     >
@@ -38,6 +43,26 @@
                         max="23:59"
                         v-model="inputTime"
                         required
+                        @keydown.enter="applyTime"
+                    />
+                </div>
+                <div v-else class="flex gap-2 w-full h-full">
+                    <input
+                        type="number"
+                        id="time"
+                        class="bg-gray-50 no-time-picker-icon border h-full text-4xl leading-none border-gray-300 text-gray-900 rounded-lg outline-none block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
+                        min="0"
+                        max="23"
+                        v-model="timeHH"
+                        @keydown.enter="applyTime"
+                    />
+                    <input
+                        type="number"
+                        id="time"
+                        class="bg-gray-50 no-time-picker-icon border h-full text-4xl leading-none border-gray-300 text-gray-900 rounded-lg outline-none block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
+                        min="0"
+                        max="59"
+                        v-model="timeMM"
                         @keydown.enter="applyTime"
                     />
                 </div>
@@ -87,9 +112,11 @@
 
 <script setup lang="ts">
 import { ref, onMounted } from 'vue';
-const goTime = ref('0h 0m');
-const inputTime = ref('00:00')
+import { detectDevice } from './../utils/detectDevice';
 
+const deviceType = ref('Desktop');
+const goTime = ref('0h 0m');
+const inputTime = ref('00:00');
 
 const props = defineProps({
     time: {
@@ -101,6 +128,8 @@ const props = defineProps({
 const emit = defineEmits(['update-time']);
 
 const timeValue = ref('');
+const timeHH = ref('');
+const timeMM = ref('');
 const confirmedValue = ref(0);
 const confirmedValue2 = ref(0);
 
@@ -113,17 +142,40 @@ const applyTimeRefFunc = () => {
 
 const applyTime = () => {
     if (
-        inputTime.value === '00:00' ||
-        inputTime.value === '' ||
-        isNaN(parseInt(inputTime.value.split(':')[0])) ||
-        isNaN(parseInt(inputTime.value.split(':')[1]))
+        deviceType.value === 'Mobile' ||
+        deviceType.value === 'iOS' ||
+        deviceType.value === 'Android' ||
+        deviceType.value === 'Windows Phone'
     ) {
+        if (
+            timeHH.value === '' ||
+            timeMM.value === '' ||
+            isNaN(parseInt(timeHH.value)) ||
+            isNaN(parseInt(timeMM.value)) ||
+            parseInt(timeHH.value) > 23 ||
+            parseInt(timeMM.value) > 59 ||
+            parseInt(timeHH.value) < 0 ||
+            parseInt(timeMM.value) < 0
+        ) {
+            return;
+        }
+        confirmedValue.value = parseInt(timeHH.value);
+        confirmedValue2.value = parseInt(timeMM.value);
+        computeTimeDelta();
         return;
+    } else {
+        if (
+            inputTime.value === '00:00' ||
+            inputTime.value === '' ||
+            isNaN(parseInt(inputTime.value.split(':')[0])) ||
+            isNaN(parseInt(inputTime.value.split(':')[1]))
+        ) {
+            return;
+        }
+        confirmedValue.value = parseInt(inputTime.value.split(':')[0]);
+        confirmedValue2.value = parseInt(inputTime.value.split(':')[1]);
+        computeTimeDelta();
     }
-
-    confirmedValue.value = parseInt(inputTime.value.split(':')[0]);
-    confirmedValue2.value = parseInt(inputTime.value.split(':')[1]);
-    computeTimeDelta();
 };
 function computeTimeDelta() {
     if (confirmedValue.value === 0) {
@@ -132,7 +184,7 @@ function computeTimeDelta() {
 
     const nowTotalMinutes = confirmedValue.value * 60 + confirmedValue2.value;
     const startTotalMinutes = props.time.hh * 60 + props.time.mm;
-    const workedTotalMinutes = nowTotalMinutes - startTotalMinutes;    
+    const workedTotalMinutes = nowTotalMinutes - startTotalMinutes;
     if (workedTotalMinutes <= 4 * 60) {
         refactorDeficit(workedTotalMinutes - 7 * 60);
     } else if (
@@ -161,11 +213,11 @@ function computeTimeDelta() {
 }
 const refactorDeficit = (time: number) => {
     console.log(time);
-    
+
     const hours = ref(0);
     const minutes = ref(0);
-    const neg = ref(false)
-    if(time < 0){
+    const neg = ref(false);
+    if (time < 0) {
         neg.value = true;
     }
 
@@ -173,13 +225,13 @@ const refactorDeficit = (time: number) => {
     hours.value = Math.floor(time / 60);
     minutes.value = time % 60;
 
-    if(neg.value){
+    if (neg.value) {
         goTime.value = `-${hours.value}h ${minutes.value}m`;
         return;
     } else {
         goTime.value = `+${hours.value}h ${minutes.value}m`;
     }
-}
+};
 applyTimeRef.value = applyTime;
 
 onMounted(() => {
@@ -190,10 +242,19 @@ onMounted(() => {
             .toString()
             .padStart(2, '0')}:${props.time.mm.toString().padStart(2, '0')}`;
     }
+
+    deviceType.value = detectDevice();
+
     const currentDate = new Date().toISOString().split('T')[0]; // Format: YYYY-MM-DD
-    if(localStorage.getItem('startHH') && localStorage.getItem('startMM') && localStorage.getItem('creationDate') === currentDate) {
+    if (
+        localStorage.getItem('startHH') &&
+        localStorage.getItem('startMM') &&
+        localStorage.getItem('creationDate') === currentDate
+    ) {
         props.time.hh = parseInt(localStorage.getItem('startHH')!);
         props.time.mm = parseInt(localStorage.getItem('startMM')!);
+        timeHH.value = localStorage.getItem('startHH')!;
+        timeMM.value = localStorage.getItem('startMM')!;
     }
 });
 </script>
@@ -201,11 +262,11 @@ onMounted(() => {
 <style scoped>
 /* Entfernt das Zeitpicker-Icon in Webkit-basierten Browsern (z.B. Chrome, Safari) */
 .no-time-picker-icon::-webkit-calendar-picker-indicator {
-  display: none;
+    display: none;
 }
 
 /* Entfernt das Zeitpicker-Icon in Firefox */
 .no-time-picker-icon::-moz-focus-inner {
-  border: 0;
+    border: 0;
 }
 </style>

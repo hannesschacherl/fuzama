@@ -11,12 +11,12 @@
                 @update-time="updateTime"
                 class="xl:col-span-5 xl:row-span-1 md:col-span-2 sm:row-span-1 col-span-3 row-span-1 w-full h-full overflow-hidden"
             />
-            <!-- <AchievementsContainer class="hidden xl:grid h-full w-full xl:col-span-2 bg-blue-200 col-span-3 row-span-2" /> -->
             <GehenContainer
                 :time="time"
                 @update-time="updateTime"
                 class="xl:col-span-2 xl:row-span-1 md:col-span-1 md:row-span-1 col-span-3 row-span-1"
             />
+            
             <TimeTable
                 :time="time"
                 @update-time="updateTime"
@@ -102,7 +102,9 @@
                                         freigeschaltet</DialogTitle
                                     >
                                     <div class="mt-2 flex flex-col gap-4">
-                                        <p class="text-sm text-gray-500 dark:text-white text-left">
+                                        <p
+                                            class="text-sm text-gray-500 dark:text-white text-left"
+                                        >
                                             Sie haben die Errungenschaft
                                             {{ errungenschaft }} freigeschaltet.
                                             Zum speichern als PDF Ihren Namen
@@ -157,6 +159,10 @@
 
 <script setup lang="ts">
 import { onMounted, onUnmounted } from 'vue';
+import { detectDevice } from './../utils/detectDevice';
+const deviceType = ref('');
+
+
 import {
     Dialog,
     DialogPanel,
@@ -183,7 +189,7 @@ const achievements = ref([
 ]);
 
 watch(time, (newTime) => {
-    if(localStorage.getItem('achievement-mode') === 'on'){
+    if (localStorage.getItem('achievement-mode') === 'on') {
         if (newTime.hh === 7 && newTime.mm < 30) {
             triggerAchievement('853e8c5d07e64187814647e094235159');
         }
@@ -191,15 +197,20 @@ watch(time, (newTime) => {
 });
 
 const triggerAchievement = (id: string) => {
-    errungenschaftID.value = achievements.value.find((a) => a.id === id)?.id || '';
-    errungenschaft.value = achievements.value.find((a) => a.id === id)?.name || '';
+    if(deviceType.value === 'mobile') {
+        return;
+    }
+    errungenschaftID.value =
+        achievements.value.find((a) => a.id === id)?.id || '';
+    errungenschaft.value =
+        achievements.value.find((a) => a.id === id)?.name || '';
     open.value = true;
 };
 
 const achievementContinue = () => {
-    if(name.value === ''){
+    if (name.value === '') {
         const nameInput = document.getElementById('nameinput');
-        if (nameInput) {            
+        if (nameInput) {
             nameInput.classList.add('ring-red-500');
             return;
         }
@@ -223,6 +234,17 @@ const name = ref('');
 onMounted(() => {
     checkScreenWidth();
     window.addEventListener('resize', checkScreenWidth);
+
+    if (
+        detectDevice() == 'iOS' ||
+        detectDevice() == 'Android' ||
+        detectDevice() == 'Windows Phone' ||
+        detectDevice() == 'Mobile'
+    ) {
+        deviceType.value = 'mobile';
+    } else {
+        deviceType.value = 'desktop';
+    }
 });
 
 onUnmounted(() => {
