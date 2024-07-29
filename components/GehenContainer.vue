@@ -54,6 +54,7 @@
                         min="0"
                         max="23"
                         v-model="timeHH"
+                        inputmode="numeric"
                         @keydown.enter="applyTime"
                     />
                     <input
@@ -63,6 +64,7 @@
                         min="0"
                         max="59"
                         v-model="timeMM"
+                        inputmode="numeric"
                         @keydown.enter="applyTime"
                     />
                 </div>
