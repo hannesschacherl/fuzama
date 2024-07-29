@@ -1,0 +1,11 @@
+FROM node:19-alpine
+
+EXPOSE 3000
+
+COPY --chown=node:node ./production-bundle /app
+
+USER node
+
+WORKDIR /app
+
+CMD ["node", "/app/server/index.mjs"]
