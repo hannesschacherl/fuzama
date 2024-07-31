@@ -264,7 +264,9 @@ const updateTime = (newTime: { hh: number; mm: number }) => {
 };
 
 const checkFinished = () => {
-
+    if(time.value.hh === 0 && time.value.mm === 0) {
+        return;
+    }
     const startTime = time.value.hh * 60 + time.value.mm;
     const endTime = startTime + 7 * 60 + 45;
 
