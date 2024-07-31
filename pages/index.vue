@@ -3,7 +3,7 @@
         class="w-screen h-max min-h-screen bg-[#F3F4F6] dark:bg-gray-900 flex items-center justify-center overflow-x-auto"
     >
         <div
-            v-if="isLargeScreen"
+            v-if="isLargeScreen && !finished"
             class="w-full h-full p-4 sm:p-12 grid xl:grid-cols-5 xl:grid-rows-2 gap-8 grid-cols-3 grid-rows-[550px,_330px,_330px] sm:grid-rows-[430px,_330px,_330px] md:grid-cols-2 md:grid-rows-2 overflow-x-hidden overflow-y-auto"
         >
             <TimeContainer
@@ -16,14 +16,14 @@
                 @update-time="updateTime"
                 class="xl:col-span-2 xl:row-span-1 md:col-span-1 md:row-span-1 col-span-3 row-span-1"
             />
-            
+
             <TimeTable
                 :time="time"
                 @update-time="updateTime"
                 class="xl:col-span-3 xl:row-span-1 md:col-span-1 md:row-span-1 col-span-3 row-span-1"
             />
         </div>
-        <div v-else class="p-2">
+        <div v-else-if="!isLargeScreen" class="p-2">
             <div
                 class="shadow-xl flex p-4 outline outline-red-800 mb-4 text-sm text-red-800 rounded-lg bg-red-50 dark:bg-gray-800 dark:text-red-400"
                 role="alert"
@@ -50,6 +50,42 @@
                     </ul>
                 </div>
             </div>
+        </div>
+        <div
+            v-if="finished"
+            class="w-screen h-screen relative bg-[#F3F4F6] dark:bg-gray-900"
+        >
+            <button
+                type="button"
+                class="inline-flex z-10 items-center absolute top-2 left-2 gap-x-2 rounded-md bg-[#009999] px-3.5 py-2.5 text-xl font-semibold text-white shadow-sm hover:bg-[#1a8787] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600"
+                @click="finished = false; closeClicked = true"
+            >
+                <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    fill="none"
+                    viewBox="0 0 24 24"
+                    stroke-width="1.5"
+                    stroke="currentColor"
+                    class="size-6"
+                >
+                    <path
+                        stroke-linecap="round"
+                        stroke-linejoin="round"
+                        d="M10.5 19.5 3 12m0 0 7.5-7.5M3 12h18"
+                    />
+                </svg>
+
+                Zurück
+            </button>
+
+            <div
+                class="dark:text-white absolute top-[50%] left-[50%] translate-x-[-50%] translate-y-[-50%] items-center justify-center text-8xl lg:text-[10rem] text-center"
+            >
+                <div class="font-bold text-[#009999]">Zeit</div>
+                <div>zu</div>
+                <div>gehen!</div>
+            </div>
+            <Firework class="absolute bottom-0 left-[50%] translate-x-[-50%]" />
         </div>
     </div>
 
@@ -161,7 +197,9 @@
 import { onMounted, onUnmounted } from 'vue';
 import { detectDevice } from './../utils/detectDevice';
 const deviceType = ref('');
-
+const finished = ref(false);
+const closeClicked = ref(false);
+let intervalId: NodeJS.Timeout | null = null;
 
 import {
     Dialog,
@@ -197,7 +235,7 @@ watch(time, (newTime) => {
 });
 
 const triggerAchievement = (id: string) => {
-    if(deviceType.value === 'mobile') {
+    if (deviceType.value === 'mobile') {
         return;
     }
     errungenschaftID.value =
@@ -222,8 +260,42 @@ const achievementContinue = () => {
 
 const updateTime = (newTime: { hh: number; mm: number }) => {
     time.value = newTime;
-    console.log('time updated');
+    closeClicked.value = false;
 };
+
+const checkFinished = () => {
+
+    const startTime = time.value.hh * 60 + time.value.mm;
+    const endTime = startTime + 7 * 60 + 45;
+
+    const endHH = Math.floor(endTime / 60);
+    const endMM = endTime % 60;
+
+    const end = new Date().setHours(endHH, endMM, 0, 0);    
+    
+    if (Date.now() >= end && !closeClicked.value) {
+        finished.value = true;
+    }
+}
+
+const startChecking = () => {
+  intervalId = setInterval(checkFinished, 1000);
+};
+
+const stopChecking = () => {
+  if (intervalId) {
+    clearInterval(intervalId);
+    intervalId = null;
+  }
+};
+
+onMounted(() => {
+  startChecking();
+});
+
+onBeforeUnmount(() => {
+  stopChecking();
+});
 
 const checkScreenWidth = () => {
     isLargeScreen.value = window.innerWidth >= 320;
