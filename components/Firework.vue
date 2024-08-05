@@ -56,9 +56,9 @@ export default {
             let fireworks = [];
             let particles = [];
             let hue = 120;
-            const limiterTotal = 5;
+            const limiterTotal = 2; // Reduced interval for user-initiated fireworks
             let limiterTick = 0;
-            const timerTotal = 80;
+            const timerTotal = 40; // Reduced interval for auto-launching fireworks
             let timerTick = 0;
             let mousedown = false;
             let mx = 0;

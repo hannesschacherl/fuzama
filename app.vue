@@ -2,7 +2,9 @@
   <div class="overflow-x-hidden judson-regular overflow-y-auto">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link href="https://fonts.googleapis.com/css2?family=Judson:ital,wght@0,400;0,700;1,400&display=swap" rel="stylesheet">
-    <NuxtPage />
+    <KeepAlive>
+      <NuxtPage />
+    </KeepAlive>
   </div>
 </template>
 
