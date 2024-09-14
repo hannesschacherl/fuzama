@@ -329,6 +329,7 @@ function computeTimeDelta() {
     } else if (7 * 60 + 45 < workedTotalMinutes) {
         refactorDeficit(workedTotalMinutes - (7 * 60 + 45));
     }
+    updateProgressBar()
     setTimeout(() => computeTimeDelta(), 1000);
 }
 

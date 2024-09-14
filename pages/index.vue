@@ -228,7 +228,7 @@ const achievements = ref([
 
 watch(time, (newTime) => {
     if (localStorage.getItem('achievement-mode') === 'on') {
-        if (newTime.hh === 7 && newTime.mm < 30) {
+        if (newTime.hh >= 7 && newTime.mm < 30) {
             triggerAchievement('853e8c5d07e64187814647e094235159');
         }
     }
