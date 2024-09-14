@@ -29,6 +29,8 @@ jobs:
         with:
           name: production-bundle
           path: .output/
+          include-hidden-files: true
+          if-no-files-found: warn
 
   build-docker-image:
     runs-on: ubuntu-22.04
